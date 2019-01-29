@@ -1,4 +1,4 @@
-# death-matching
+# Probabilistic-matching
 Program to perform probabilistic matching between EMR and external data. 
 
 *--Developer:  Peter Leese
