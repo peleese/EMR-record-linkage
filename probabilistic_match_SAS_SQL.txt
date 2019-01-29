@@ -1,0 +1,205 @@
+COPYRIGHT NOTICE
+    Created and programmed by Peter Leese to perform probabilistic matching between 
+    EMR data with identifiers and external data with identifiers.  
+    Copyright (C) 2015  Peter Leese
+*********************************************************;
+
+  This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, version 3.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+*********************************************************;
+
+*--EMR to External Death Data Probabilistic match program 
+
+*--Purpose:  This program standardizes emr patient
+ identifiersand external death information, then peforms
+ a probabilistic match and computes a weighted-match
+ score. Examples of external death data sources would
+ be death data available from Social Security, the NDI
+ from CDC for research purposes, or the state-level files 
+used to assemble the NDI.  
+
+*--Notes:  This program is presented to illustrate the
+logic and method to employ probabilistic matching as a
+form of data integration to supplement native emr 
+documentation.  This program is not intended to function
+as-is or as a macro to be implemented unmodified within
+a different environment.  This is a simple probabilistic 
+matching program developed in a short period of time - 
+after dedicatedtesting, we felt this program represented  
+the optimal balance of match performance relative to 
+development time that still allowed flexible implementation 
+both in statistical programming and data integration/SQL
+environments.  
+
+*--Developer:  Peter Leese
+*--Institution:  UNC-Health Care System
+*--Developed:  May 2015
+*********************************************************;
+
+
+*--initiate sas libnames for libraries as necessary;
+*--within this program we utilize an external death data file already loaded into the 'work' library,
+and a second library 'emr' that connects to the emr database;
+
+
+*--the purpose of the first step is to extract and standardize person identifiers from the external death 
+data set for the subsequent match. identifiers focused on are names (first, middle, last, suffixes), 
+sex, social security numbers, date-of-birth, date-of-death, house number, zip code, and city of residence. 
+the focus of this program is on matching - once the match is performed
+match keys can be generated to facilitate matching of additional death data, such as cause of death codes;
+
+	
+proc sql;
+	create table work.state_data as
+	select 
+		gname,
+		mname,
+		substr(lname,1,find(lname," ")) as lname,
+		substr(lname,find(lname," "),30) as lname_suffix,
+		substr(flname,1,find(flname," ")) as flname,
+		substr(flname,find(flname," "),30) as flname_suffix,
+		sex format=$1.,
+		ssn as state_ssn,
+		cats(dob_mo,dob_dy,dob_yr) as dob,
+		cats(dod_mo,dod_dy,dod_yr) as dod,
+		addrnum,
+		zipcode,
+		place
+	from
+		work.stg_state_death_data;
+quit;
+
+
+
+*--in the second step we similarly extract and standardize patient identifiers from the emr in the same fashion
+as the first step;
+
+proc sql;
+	create table work.emr_data as
+	select
+		mrn, 
+		last_name,
+			case when btrim(upper(substr(emr_last_name,find(emr_last_name," "),4))) in ('JR','SR','II','III','IV') then upper(substr(emr_last_name,1,find(emr_last_name," ")))
+			else  upper(compress(emr_last_name,,'dps')) end as emr_lname,
+		upper(compress(emr_first_name,,'dps')) as emr_fname,
+		substr(upper(compress(emr_middle_name,,'dps')),1,1) as emr_minitial,
+		birth_date,
+			case when sex_c="1" then "F" when sex_c="2" then "M" else '' end as sex,
+		add_line_1,
+		add_line_2,
+			case when compress(substr(ADD_LINE_1,1,5),,'aAp') is not null then compress(substr(ADD_LINE_1,1,5),,'aAp') 
+			else compress(substr(ADD_LINE_1,7,10),,'aAp') end as emr_house_number,
+		upper(scan(add_line_1,2)) as emr_street,
+		upper(city) as emr_city,
+		substr(zip,1,5) as emr_zip,
+		case when compress(ssn,"-") in ('999999999','000000000','999990999') then '' else compress(ssn,"-") end as emr_ssn,
+		upper(email_address) as emr_email,
+		compress(home_phone,'-',,) as emr_home_phone,
+		work_phone as emr_work_phone,
+	from
+		emr.patient;
+quit;
+
+
+
+*--match external data patients to emr patients using probabilistic match;
+
+proc sql;
+	create table work.matched_output as
+	select distinct
+		mrn,
+		state_ssn,
+		emr_ssn,
+		lname,
+		emr_lname,
+		gname,
+		emr_fname,
+		dob,
+		put(datepart(birth_date),mmddyyn8.) as emr_dob,
+		put(birth_date2,mmddyyn8.) as emr_dob2,
+		mname,
+		emr_minitial,
+		addrnum,
+		emr_house_number,
+		/*street,
+		emr_street,
+		city,
+		emr_city,*/
+		zipcode,
+		emr_zip,
+		/*email_address,
+		emr_email,
+		soundex(emr_fname) as soundex_emr_fname,
+		spedis(bene_fname, emr_fname) as spedis_fname,
+		(beneficiary_prep.date_of_birth - emr_match.birth_date2) as dob_dist,*/
+
+
+	case when state_data.lname = ' ' or  emr_match.emr_lname = ' ' then 0
+	when state_data.lname = emr_match.emr_lname then 10
+	when complev(state_data.lname, emr_match.emr_lname)/max(length(state_data.lname),length(emr_match.emr_lname))	between .26 and .35 then 3
+	when complev(state_data.lname, emr_match.emr_lname)/max(length(state_data.lname),length(emr_match.emr_lname))	between .01 and .25 then 7
+	else -5 end as lname_score,
+
+	case when state_data.gname = ' ' or  emr_match.emr_fname = ' ' then 0
+	when state_data.gname = emr_match.emr_fname then 10
+	when complev(state_data.gname, emr_match.emr_fname)/max(length(state_data.gname),length(emr_match.emr_fname))	between .26 and .35 then 3
+	when complev(state_data.gname, emr_match.emr_fname)/max(length(state_data.gname),length(emr_match.emr_fname))	between .01 and .25 then 7
+	else -5 end as fname_score,
+
+	case when state_data.dob = ' ' or  put(datepart(emr_match.birth_date),mmddyyn8.) = ' ' then 0
+	when state_data.dob = put(datepart(emr_match.birth_date),mmddyyn8.) then 10
+	when complev(state_data.dob,  put(datepart(emr_match.birth_date),mmddyyn8.)) between 1 and 2 then 7
+	when complev(state_data.dob, put(datepart(emr_match.birth_date),mmddyyn8.))  between 3 and 4 then 3
+	else -5 end as dob_score,
+
+	case when state_data.ssn = ' ' or emr_match.emr_ssn = ' ' then 0
+	when state_data.ssn = emr_match.emr_ssn then 25
+	when complev (state_data.ssn, emr_match.emr_ssn) = 2 then 3
+	when complev (state_data.ssn, emr_match.emr_ssn) = 1 then 5
+	else -5 end as ssn_score,
+
+	case when state_data.mname = ' ' or emr_match.emr_minitial = ' ' then 0
+	when state_data.mname = emr_match.emr_minitial then 5
+	else -5 end as mname_score,
+
+	case when state_data.zipcode = ' ' or emr_match.emr_zip = ' ' then .
+	when state_data.zipcode = emr_match.emr_zip then 5
+	else 0 end as zip_score,
+
+	case when state_data.addrnum = ' ' or emr_match.emr_house_number = ' ' then .
+	when state_data.addrnum = emr_match.emr_house_number then 5
+	else 0 end as house_score,
+
+
+	sum(calculated lname_score, calculated fname_score, calculated dob_score, calculated ssn_score, calculated mname_score, 
+	 calculated zip_score, calculated house_score) as wms
+
+	
+	from work.state_data
+		INNER JOIN
+	 work.emr_match on
+
+	
+
+		 (	(complev(state_data.lname, emr_match.emr_lname) le 2)
+		AND
+			(complev(state_data.gname, emr_match.emr_fname) le 2)
+		AND
+			(complev(state_data.dob,put(datepart(emr_match.birth_date),mmddyyn8.)) le 2)
+		AND
+			substr(state_data.lname,1,4) = substr(emr_match.emr_lname,1,4) )
+		/*OR
+			state_data.ssn = emr_match.emr_ssn*/
+
+		order by wms;
+quit;
