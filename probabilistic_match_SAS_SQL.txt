@@ -1,7 +1,3 @@
-COPYRIGHT NOTICE
-    Created and programmed by Peter Leese to perform probabilistic matching between 
-    EMR data with identifiers and external data with identifiers.  
-    Copyright (C) 2015  Peter Leese
 *********************************************************;
 
   This program is free software: you can redistribute it and/or modify
@@ -28,18 +24,10 @@ COPYRIGHT NOTICE
  from CDC for research purposes, or the state-level files 
 used to assemble the NDI.  
 
-*--Notes:  This program is presented to illustrate the
-logic and method to employ probabilistic matching as a
-form of data integration to supplement native emr 
-documentation.  This program is not intended to function
-as-is or as a macro to be implemented unmodified within
-a different environment.  This is a simple probabilistic 
-matching program developed in a short period of time - 
-after dedicatedtesting, we felt this program represented  
-the optimal balance of match performance relative to 
-development time that still allowed flexible implementation 
-both in statistical programming and data integration/SQL
-environments.  
+*--Warning:  To make this program available I have removed
+any potentially sensitive or proprietary information to UNC 
+and all related parties.  If I have been inconsistent in re-naming 
+variables or making similar modifications, please inform me.  
 
 *--Developer:  Peter Leese
 *--Institution:  UNC-Health Care System
@@ -51,14 +39,12 @@ environments.
 *--within this program we utilize an external death data file already loaded into the 'work' library,
 and a second library 'emr' that connects to the emr database;
 
+  libname emr __________;
 
 *--the purpose of the first step is to extract and standardize person identifiers from the external death 
 data set for the subsequent match. identifiers focused on are names (first, middle, last, suffixes), 
-sex, social security numbers, date-of-birth, date-of-death, house number, zip code, and city of residence. 
-the focus of this program is on matching - once the match is performed
-match keys can be generated to facilitate matching of additional death data, such as cause of death codes;
+sex, social security numbers, date-of-birth, date-of-death, house number, zip code, and city of residence;
 
-	
 proc sql;
 	create table work.state_data as
 	select 
@@ -79,10 +65,8 @@ proc sql;
 		work.stg_state_death_data;
 quit;
 
-
-
-*--in the second step we similarly extract and standardize patient identifiers from the emr in the same fashion
-as the first step;
+*--in the second step we similarly extract and standardize patient identifiers
+from the emr in the same fashionas the first step;
 
 proc sql;
 	create table work.emr_data as
@@ -110,9 +94,15 @@ proc sql;
 		emr.patient;
 quit;
 
-
-
-*--match external data patients to emr patients using probabilistic match;
+*--match external data to emr using probabilistic match and calculating
+weighted match score to suggest quality of match.  this match relies on 
+the relatively simple Levenshtein edit distance algorithm instead of 
+more complex algorithms for ease of implementing inside sql.  of note,
+edit distance algorithms require character input variables.  depending
+on use case, the join can be modified as necessary. similarly, i employ
+fuzzy blocking variables of names and dob, but have left commented out
+other useful match criteria.  see the associated readme file for 
+references on matching methods;
 
 proc sql;
 	create table work.matched_output as
@@ -137,11 +127,10 @@ proc sql;
 		emr_city,*/
 		zipcode,
 		emr_zip,
-		/*email_address,
+		email_address,
 		emr_email,
 		soundex(emr_fname) as soundex_emr_fname,
-		spedis(bene_fname, emr_fname) as spedis_fname,
-		(beneficiary_prep.date_of_birth - emr_match.birth_date2) as dob_dist,*/
+		spedis(gname, emr_fname) as spedis_fname,
 
 
 	case when state_data.lname = ' ' or  emr_match.emr_lname = ' ' then 0
@@ -196,9 +185,11 @@ proc sql;
 			(complev(state_data.gname, emr_match.emr_fname) le 2)
 		AND
 			(complev(state_data.dob,put(datepart(emr_match.birth_date),mmddyyn8.)) le 2)
-		AND
+			
+			)
+		/*AND
 			substr(state_data.lname,1,4) = substr(emr_match.emr_lname,1,4) )
-		/*OR
+		OR
 			state_data.ssn = emr_match.emr_ssn*/
 
 		order by wms;
