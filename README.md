@@ -3,7 +3,9 @@ Program to perform probabilistic matching between EMR and external data.
 
 *--Developer:  Peter Leese
 
-*--Institution:  UNC-Health Care System
+*--Center:  UNC Center for Health Innovation
+
+*--Institution:  UNC Health Care System and UNC School of Medicine
 
 *--Developed:  May 2015
 
