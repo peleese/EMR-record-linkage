@@ -1,8 +1,10 @@
-# Probabilistic-matching
+# EMR Probabilistic-matching
 Program to perform probabilistic matching between EMR and external data. 
 
 *--Developer:  Peter Leese
+
 *--Institution:  UNC-Health Care System
+
 *--Developed:  May 2015
 
 *--EMR to External Death Data Probabilistic match program 
