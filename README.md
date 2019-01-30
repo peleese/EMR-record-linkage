@@ -9,7 +9,8 @@ Program to perform probabilistic matching between EMR and external data.
 
 *--EMR to External Death Data Probabilistic match program 
 
-Purpose:  This program standardizes emr patient
+#Purpose: 
+This program standardizes emr patient
  identifiersand external death information, then peforms
  a probabilistic match and computes a weighted-match
  score. Examples of external death data sources would
@@ -17,7 +18,8 @@ Purpose:  This program standardizes emr patient
  from CDC for research purposes, or the state-level files 
 used to assemble the NDI.  
 
-Notes:  This program is presented to illustrate the
+#Notes: 
+This program is presented to illustrate the
 logic and method to employ probabilistic matching as a
 form of data integration to supplement native emr 
 documentation.  This program is not intended to function
