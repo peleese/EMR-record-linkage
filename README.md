@@ -2,8 +2,11 @@
 Program to perform probabilistic matching between EMR and external data. 
 
 *--Developer:  Peter Leese
+
 *--Institution:  UNC-Health Care System
+
 *--Developed:  May 2015
+
 *--EMR to External Death Data Probabilistic match program 
 
 Purpose:  This program standardizes emr patient
@@ -35,6 +38,7 @@ patient data and external datafacilitate matching of additional
 data not included in the match extracts created for the match.
 
 Recommended references on probabilistic matching methods:
+
 https://www.lexjansen.com/wuss/2010/databases/2997_2_DDI-Wright.PDF
 https://www.lexjansen.com/nesug/nesug07/ap/ap23.pdf
 https://www.lexjansen.com/wuss/2011/data/Papers_Wright_G_76128.pdf
