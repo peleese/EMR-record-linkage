@@ -39,7 +39,7 @@ assessed from the weighted match score, keys can be generated between
 patient data and external datafacilitate matching of additional 
 data not included in the match extracts created for the match.
 
-Recommended references on probabilistic matching methods:
+**Recommended references on probabilistic matching methods:**
 
 https://www.lexjansen.com/wuss/2010/databases/2997_2_DDI-Wright.PDF
 https://www.lexjansen.com/nesug/nesug07/ap/ap23.pdf
