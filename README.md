@@ -46,6 +46,7 @@ https://www.lexjansen.com/nesug/nesug07/ap/ap23.pdf
 https://www.lexjansen.com/wuss/2011/data/Papers_Wright_G_76128.pdf
 http://support.sas.com/resources/papers/proceedings14/1674-2014.pdf
 https://support.sas.com/resources/papers/proceedings/proceedings/sugi24/Advtutor/p46-24.pdf
-https://www.ncbi.nlm.nih.gov/books/NBK253312/
 http://support.sas.com/resources/papers/proceedings14/1316-2014.pdf
+https://www.ncbi.nlm.nih.gov/books/NBK253312/
+
 
