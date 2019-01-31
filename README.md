@@ -11,6 +11,14 @@ Program to perform probabilistic matching between EMR and external data.
 
 *--EMR to External Death Data Probabilistic match program 
 
+**Citing:**  If you use this program as part of a research
+activity that results in a publication, please cite your
+usage of this computer software.  This is an APA suggested
+style for citing computer software:
+
+Leese, P.J. (2015).  Probabilistic EMR Linkage [Computer Software].  
+    Chapel Hill, NC: UNC HCS & SOM.  Retrieved from https://github.com/peleese/EMR-record-linkage
+
 **Purpose:** 
 This program standardizes emr patient
  identifiersand external death information, then peforms
