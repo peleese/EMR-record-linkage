@@ -13,6 +13,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 *********************************************************;
+*--Developer:  Peter Leese
+*--Institution:  UNC-Health Care System
+*--Developed:  May 2015
 
 *--EMR to External Death Data Probabilistic match program 
 
@@ -29,9 +32,14 @@ any potentially sensitive or proprietary information to UNC
 and all related parties.  If I have been inconsistent in re-naming 
 variables or making similar modifications, please inform me.  
 
-*--Developer:  Peter Leese
-*--Institution:  UNC-Health Care System
-*--Developed:  May 2015
+*--Citing:  If you use this program as part of a research
+activity that results in a publication, please cite your
+usage of this computer software.  This is an APA suggested
+style for citing computer software:
+
+Leese, P.J. (2015).  Probabilistic EMR Linkage [Computer Software].  
+    Chapel Hill, NC: UNC HCS & SOM.  Retrieved from https://github.com/peleese/EMR-record-linkage
+
 *********************************************************;
 
 
@@ -39,7 +47,7 @@ variables or making similar modifications, please inform me.
 *--within this program we utilize an external death data file already loaded into the 'work' library,
 and a second library 'emr' that connects to the emr database;
 
-  libname emr __________;
+  libname emr ___________________;
 
 *--the purpose of the first step is to extract and standardize person identifiers from the external death 
 data set for the subsequent match. identifiers focused on are names (first, middle, last, suffixes), 
